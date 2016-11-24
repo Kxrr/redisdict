@@ -12,3 +12,8 @@ A dict-like object using Redis as the backend.
 >>> d['name']
 'Kxrr'
 ```
+
+
+## TODO
+
+- Complex object supporting

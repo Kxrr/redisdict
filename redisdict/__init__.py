@@ -99,3 +99,7 @@ class RedisDict(Mapping):
 class AutoCleanRedisDict(RedisDict):
     def __init__(self, name, d):
         super(AutoCleanRedisDict, self).__init__(name, d, autoclean=True)
+
+
+class ComplexRedisDict(RedisDict):
+    pass

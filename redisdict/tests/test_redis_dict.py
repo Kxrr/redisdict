@@ -82,3 +82,6 @@ class TestRedisDict(unittest.TestCase):
         with self.assertRaises(ValueError):
             AutoCleanRedisDict('data', {'user_data': {}})
 
+    def test_decode(self):
+        pass
+
