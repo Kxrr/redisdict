@@ -1,33 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
-import redis
-import urlparse
-from collections import Mapping, defaultdict
+from collections import Mapping
+from numbers import Number
+
+from redisdict.utils import connect_redis, get_default_value, mutex
 
 VERSION = (0, 0, 1)
 __version__ = '.'.join(map(str, VERSION))
-
-
-def get_default_value(d):
-    value = ''
-    if isinstance(d, defaultdict):
-        value = d.default_factory()
-    return value
-
-
-def connect_redis(uri):
-    """
-    Create a redis connection by uri.
-    """
-    puri = urlparse.urlparse(uri)
-    host = puri.hostname
-    port = puri.port
-    password = puri.password if puri.password else ''
-    db_name = puri.path.split('/')[1]
-    r = redis.Redis(host=host, port=port, password=password, db=db_name)
-    assert r.ping()
-    return r
 
 
 class RedisDict(Mapping):
@@ -49,6 +29,10 @@ class RedisDict(Mapping):
 
         self.map(self._origin)
         self._set_item(self._default_key, get_default_value(self._origin))
+
+    @classmethod
+    def get_connection(cls, uri):
+        return connect_redis(uri)
 
     @staticmethod
     def gen_name(name):
@@ -98,8 +82,15 @@ class RedisDict(Mapping):
 
     @staticmethod
     def check_value_type(value):
-        if isinstance(value, (type(None),)):
+        if not isinstance(value, (Number, basestring)):
             raise ValueError('{0} is not supported.'.format(type(value)))
+
+    def Lock(self, expire):
+        """
+        :type expire: int
+        """
+        name = '_LOCK_{0}'.format(self._name)
+        return mutex(self._r, name, expire)
 
     def __str__(self):
         return '<{0}>'.format(self._name)

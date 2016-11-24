@@ -75,5 +75,10 @@ class TestRedisDict(unittest.TestCase):
         self.assertEqual(data['price'], self._data['price'])
         self.assertEqual(data[str(uuid.uuid4())], 'a')
 
-    def test_decode(self):
-        pass
+    def test_type(self):
+        with self.assertRaises(ValueError):
+            AutoCleanRedisDict('data', {'nums': [1, 2, 3, 4]})
+
+        with self.assertRaises(ValueError):
+            AutoCleanRedisDict('data', {'user_data': {}})
+
