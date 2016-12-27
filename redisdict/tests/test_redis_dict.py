@@ -10,12 +10,21 @@ from redisdict.redisdict import SimpleRedisDict, ComplexRedisDict
 from redisdict.exceptions import SerialisationError
 
 
-class RedisDictTestCase(unittest.TestCase):
+class _RedisDictTestCase(unittest.TestCase):
     klass = SimpleRedisDict
     name = 'dct'
 
     def setUp(self):
         self.klass(self.name, {}, autoclean=True)  # clean it up
+
+    def test_init_empty(self):
+        self.klass(self.name, {})
+
+    def test_key_not_exist(self):
+        cloud = self.klass(self.klass, {'name': 'Jim'})
+        cloud['name']
+        with self.assertRaises(KeyError):
+            cloud['age']
 
     def test_delete(self):
         pass
@@ -24,11 +33,8 @@ class RedisDictTestCase(unittest.TestCase):
         pass
 
 
-class SimpleRedisDictCase(RedisDictTestCase):
+class SimpleRedisDictCase(_RedisDictTestCase):
     klass = SimpleRedisDict
-
-    def test_init_empty(self):
-        self.klass(self.name, {})
 
     def test_dict(self):
         origin = {
@@ -54,17 +60,15 @@ class SimpleRedisDictCase(RedisDictTestCase):
         self.assertEqual(cloud[str(uuid.uuid4())], v)
 
 
-class ComplexRedisDictCase(RedisDictTestCase):
+class ComplexRedisDictCase(_RedisDictTestCase):
     klass = ComplexRedisDict
-
-    def test_init_empty(self):
-        self.klass(self.name, {})
 
     def test_dict(self):
         origin = {
             'name': 'Jim',
             'birth': datetime.date.today(),
             'id': uuid.uuid4(),
+            'address': None,
         }
 
         cloud = self.klass(self.name, origin)

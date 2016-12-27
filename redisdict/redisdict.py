@@ -30,6 +30,7 @@ class SimpleRedisDict(Mapping):
         self._dct = dct.copy()
         self._conn = connect_redis(uri)
         self._default_key = self.generate_key_name('default')
+        self._is_default_dict = False
 
         self.resolve_options(kwargs)
 
@@ -37,6 +38,7 @@ class SimpleRedisDict(Mapping):
             self.setitem(key, value, force=False)
 
         if isinstance(self._dct, defaultdict):
+            self._is_default_dict = True
             self.setitem(self._default_key, self._dct.default_factory())
 
         self.after_init()
@@ -82,6 +84,8 @@ class SimpleRedisDict(Mapping):
         return self._conn.delete(self._name)
 
     def __getitem__(self, key):
+        if (key not in self) and (not self._is_default_dict):
+            raise KeyError(key)
         return self.getitem(key) or self.get(self._default_key)
 
     def __setitem__(self, key, value):

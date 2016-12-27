@@ -8,7 +8,7 @@ def get_requirements(filename):
 
 setuptools.setup(
     name='redisdict',
-    version='0.0.1',
+    version='0.0.2',
     packages=setuptools.find_packages(exclude=['tests', 'tests.*']),
     url='https://github.com/kxrr/redisdict',
     license='MIT',
