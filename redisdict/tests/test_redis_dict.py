@@ -1,84 +1,73 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+
+import datetime
 import uuid
 import collections
 import unittest
 
-from redisdict import RedisDict, AutoCleanRedisDict
+from redisdict.redisdict import SimpleRedisDict, ComplexRedisDict
+from redisdict.exceptions import SerialisationError
 
 
-class ImmutableDict(dict):
-    def __setitem__(self, key, value):
-        raise ValueError
+class RedisDictTestCase(unittest.TestCase):
+    klass = SimpleRedisDict
+    name = 'dct'
 
-    def __delitem__(self, key):
-        raise ValueError
+    def setUp(self):
+        self.klass(self.name, {}, autoclean=True)  # clean it up
+
+    def test_delete(self):
+        pass
+
+    def test_resolve_options(self):
+        pass
 
 
-class TestRedisDict(unittest.TestCase):
-    _data = ImmutableDict(price='$123')
+class SimpleRedisDictCase(RedisDictTestCase):
+    klass = SimpleRedisDict
 
     def test_init_empty(self):
-        AutoCleanRedisDict('data', {})
+        self.klass(self.name, {})
 
-    def test_get_key(self):
-        data = AutoCleanRedisDict('data', self._data)
-        self.assertEqual(data['price'], self._data['price'])
-        self.assertEqual(data.get('price'), self._data['price'])
+    def test_dict(self):
+        origin = {
+            'name': 'Jim',
+            'age': 5,
+        }
 
-    def test_set_key(self):
-        data = AutoCleanRedisDict('data', {})
-        self.assertEqual(data['price'], '')
+        cloud = SimpleRedisDict(self.klass, origin)
 
-        new_price = '$1234'
-        data['price'] = new_price
-        self.assertEqual(data['price'], new_price)
+        for k, v in origin.items():
+            value_in_cloud = cloud[k]
+            self.assertIsInstance(value_in_cloud, str)
+            self.assertEqual(value_in_cloud, str(v))
 
-    def test_del_key(self):
-        data = AutoCleanRedisDict('data', self._data)
-        del data['price']
-        self.assertEqual(data['price'], '')
-
-    def test_len(self):
-        data = AutoCleanRedisDict('data', self._data)
-        self.assertTrue(len(data), len(self._data))
-
-    def test_auto_clean(self):
-        data = AutoCleanRedisDict('data', self._data)
-        new_price = '$567'
-        data2 = AutoCleanRedisDict('data', {'price': new_price})
-        self.assertEqual(data['price'], data2['price'])
-        self.assertEqual(data2['price'], new_price)
-
-    def test_iter(self):
-        data = AutoCleanRedisDict('data', self._data)
-        self.assertListEqual(data.keys(), self._data.keys())
-        self.assertListEqual(data.values(), self._data.values())
-
-    def test_redis_dict(self):
-        RedisDict('data', {}).del_all()
-
-        data = RedisDict('data', self._data)
-        self.assertEqual(data['price'], self._data['price'])
-
-        new_price = '$567'
-        data2 = RedisDict('data', {'price': new_price})
-        self.assertEqual(data['price'], self._data['price'])
-
-        data2['price'] = new_price
-        self.assertEqual(data['price'], new_price)
+    def test_raise_error(self):
+        with self.assertRaises(SerialisationError):
+            self.klass(self.name, {'name': None})
 
     def test_with_default_dict(self):
-        d = collections.defaultdict(lambda: 'a')
-        d.update(dict(self._data))
+        v = 'value of default dict'
+        dct = collections.defaultdict(lambda: v)
+        cloud = self.klass(self.name, dct)
+        self.assertEqual(cloud[str(uuid.uuid4())], v)
 
-        data = AutoCleanRedisDict('data', d)
-        self.assertEqual(data['price'], self._data['price'])
-        self.assertEqual(data[str(uuid.uuid4())], 'a')
 
-    def test_type(self):
-        with self.assertRaises(ValueError):
-            AutoCleanRedisDict('data', {'nums': [1, 2, 3, 4]})
+class ComplexRedisDictCase(RedisDictTestCase):
+    klass = ComplexRedisDict
 
-        with self.assertRaises(ValueError):
-            AutoCleanRedisDict('data', {'user_data': {}})
+    def test_init_empty(self):
+        self.klass(self.name, {})
 
+    def test_dict(self):
+        origin = {
+            'name': 'Jim',
+            'birth': datetime.date.today(),
+            'id': uuid.uuid4(),
+        }
+
+        cloud = self.klass(self.name, origin)
+
+        for k, v in origin.items():
+            self.assertEqual(v, cloud[k])

@@ -3,7 +3,8 @@ import redis
 import uuid
 import urlparse
 from contextlib import contextmanager
-from collections import defaultdict
+
+from .exceptions import MutexHeldError
 
 
 def connect_redis(uri):
@@ -18,20 +19,6 @@ def connect_redis(uri):
     r = redis.Redis(host=host, port=port, password=password, db=db_name)
     assert r.ping()
     return r
-
-
-def get_default_value(d):
-    """
-    Get default value from a defaultdict.
-    """
-    value = ''
-    if isinstance(d, defaultdict):
-        value = d.default_factory()
-    return value
-
-
-class MutexHeld(Exception):
-    pass
 
 
 @contextmanager
@@ -55,4 +42,4 @@ def mutex(client, name, expire):
             except redis.WatchError:
                 pass
     else:
-        raise MutexHeld
+        raise MutexHeldError
