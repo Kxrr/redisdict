@@ -22,6 +22,7 @@ datetime.date(2016, 12, 28)
 
 ## TODO
 
-- More tests
-- Flexible redis connection settings
-- Fallback strategy when losing connection from redis 
+- [x] Flexible redis connection settings
+- [ ] More tests
+- [ ] Fallback strategy when losing connection from redis 
+- [ ] Python3 supporting

@@ -22,7 +22,7 @@ def connect_redis(uri):
 
 
 @contextmanager
-def mutex(client, name, expire):
+def mutex(client, name, expire=3):
     """
     :type client: redis.Redis
     """

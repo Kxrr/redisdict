@@ -9,3 +9,7 @@ class SerialisationError(TypeError):
 
 class MutexHeldError(RuntimeError):
     pass
+
+
+class ConfigurationError(Exception):
+    pass

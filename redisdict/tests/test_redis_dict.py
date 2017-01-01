@@ -1,13 +1,19 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
+import logging
+import redis
 import datetime
 import uuid
 import collections
 import unittest
 
-from redisdict.redisdict import SimpleRedisDict, ComplexRedisDict
+from redisdict.redisdict import SimpleRedisDict, ComplexRedisDict, _config
 from redisdict.exceptions import SerialisationError
+from redisdict import configure
+
+logger = logging.getLogger('redisdict')
+logger.setLevel(logging.DEBUG)
 
 
 class _RedisDictTestCase(unittest.TestCase):
@@ -59,6 +65,11 @@ class SimpleRedisDictCase(_RedisDictTestCase):
         cloud = self.klass(self.name, dct)
         self.assertEqual(cloud[str(uuid.uuid4())], v)
 
+    def test_lock(self):
+        cloud = self.klass(self.name, {})
+        with cloud.Lock():
+            cloud['info'] = 'blah blah'
+
 
 class ComplexRedisDictCase(_RedisDictTestCase):
     klass = ComplexRedisDict
@@ -75,3 +86,12 @@ class ComplexRedisDictCase(_RedisDictTestCase):
 
         for k, v in origin.items():
             self.assertEqual(v, cloud[k])
+
+
+class ConfigTestCase(unittest.TestCase):
+
+    def test_configure_client(self):
+        client = redis.Redis()
+        configure(client=client)
+        self.assertIs(client, _config.client)
+
